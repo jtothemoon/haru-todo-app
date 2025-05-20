@@ -1,0 +1,73 @@
+package com.haru.todo.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import com.haru.todo.utils.dataStore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    app: Application
+) : AndroidViewModel(app) {
+
+    private val dataStore = app.dataStore
+
+    companion object {
+        val HOUR_KEY = intPreferencesKey("reset_hour")
+        val MINUTE_KEY = intPreferencesKey("reset_minute")
+    }
+
+    val resetHour: StateFlow<Int>
+    val resetMinute: StateFlow<Int>
+
+    val allowNotification: StateFlow<Boolean>
+
+    init {
+        val prefsFlow = dataStore.data
+            .map { prefs ->
+                Pair(
+                    prefs[HOUR_KEY] ?: 5,    // 기본 5시
+                    prefs[MINUTE_KEY] ?: 0   // 기본 0분
+                )
+            }
+
+        resetHour = prefsFlow.map { it.first }.stateIn(
+            viewModelScope, SharingStarted.Eagerly, 5
+        )
+        resetMinute = prefsFlow.map { it.second }.stateIn(
+            viewModelScope, SharingStarted.Eagerly, 0
+        )
+
+        // 알림 상태 Flow 추가
+        allowNotification = dataStore.data
+            .map { prefs -> prefs[ResetPrefs.ALLOW_NOTIFICATION] ?: true }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    }
+
+    fun setResetTime(hour: Int, minute: Int) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[HOUR_KEY] = hour
+                prefs[MINUTE_KEY] = minute
+            }
+            // 알람 등록
+            com.haru.todo.utils.AlarmScheduler.cancelResetAlarm(getApplication())
+            com.haru.todo.utils.AlarmScheduler.scheduleResetAlarm(getApplication(), hour, minute)
+        }
+    }
+
+    fun setAllowNotification(allow: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[ResetPrefs.ALLOW_NOTIFICATION] = allow
+            }
+        }
+    }
+
+}
