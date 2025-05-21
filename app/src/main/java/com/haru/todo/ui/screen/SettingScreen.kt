@@ -9,7 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
+import com.haru.todo.ui.components.settings.SettingNotificationSwitch
+import com.haru.todo.ui.components.settings.SettingTimePicker
 import com.haru.todo.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,53 +43,45 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .padding(32.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "알림 받기",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Switch(
-                    checked = allowNotification,
-                    onCheckedChange = { checked ->
-                        viewModel.setAllowNotification(checked)
-                    }
-                )
-            }
-            Spacer(Modifier.height(24.dp))
-            Text("하루 초기화 시간", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(16.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    String.format("%02d:%02d", hour, minute),
-                    style = MaterialTheme.typography.headlineMedium
-                )
-                Spacer(Modifier.width(24.dp))
-                Button(onClick = { showTimePicker = true }) {
-                    Text("시간 변경")
+            // 1. 알림 스위치
+            SettingNotificationSwitch(
+                checked = allowNotification,
+                onCheckedChange = { checked ->
+                    viewModel.setAllowNotification(checked)
                 }
-            }
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            // 2. 시간 설정
+            SettingTimePicker(
+                hour = hour,
+                minute = minute,
+                onClickChange = { showTimePicker = true }
+            )
+
             Spacer(Modifier.height(32.dp))
-            // 추가로 저장 버튼 등 필요시 구현
 
         }
+        // 시간 다이얼로그
         if (showTimePicker) {
-            TimePickerDialog(
-                context,
-                { _, h, m ->
-                    viewModel.setResetTime(h, m)
-                    showTimePicker = false
-                },
-                hour, minute, true
-            ).show()
-            // 다이얼로그가 닫히지 않으면 showTimePicker를 false로 직접 설정해 주세요.
+            DisposableEffect(Unit) {
+                val dialog = TimePickerDialog(
+                    context,
+                    { _, h, m ->
+                        viewModel.setResetTime(h, m)
+                        showTimePicker = false
+                    },
+                    hour, minute, true
+                )
+                dialog.setOnDismissListener {
+                    showTimePicker = false  // 다이얼로그가 취소/닫혀도 반드시 false!
+                }
+                dialog.show()
+
+                onDispose { dialog.dismiss() }
+            }
         }
+
     }
 }

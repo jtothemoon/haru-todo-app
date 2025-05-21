@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.haru.todo.ui.theme.HourglassBarBg
 import com.haru.todo.ui.theme.HourglassBarColor
 import com.haru.todo.ui.theme.UnfilledColor
+import com.haru.todo.ui.theme.haruSwitchColors
 
 @Composable
 fun StatusBar(
@@ -48,12 +49,7 @@ fun StatusBar(
                 Switch(
                     checked = showDoneTasks,
                     onCheckedChange = onToggleShowDoneTasks,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                        uncheckedThumbColor = UnfilledColor,
-                        uncheckedTrackColor = UnfilledColor.copy(alpha = 0.3f)
-                    )
+                    colors = haruSwitchColors()
                 )
             }
         }
