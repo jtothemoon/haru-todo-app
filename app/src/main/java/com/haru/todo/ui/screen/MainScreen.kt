@@ -1,23 +1,20 @@
 package com.haru.todo.ui.screen
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.haru.todo.data.model.Task
 import com.haru.todo.data.model.TaskCategory
-import com.haru.todo.ui.components.AddTaskDialog
+import com.haru.todo.ui.components.AddTaskBar
+import com.haru.todo.ui.components.AppBar
+import com.haru.todo.ui.components.ProgressBarSection
+import com.haru.todo.ui.components.StatusBar
 import com.haru.todo.ui.components.TaskList
-import com.haru.todo.ui.components.TopBar
 import com.haru.todo.viewmodel.MainViewModel
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
@@ -38,115 +35,85 @@ fun MainScreen(
     val generalTotal = tasks.count { it.category == TaskCategory.GENERAL }
 
     // 할 일 추가 다이얼로그 노출 여부 상태
-    var showDialog by remember { mutableStateOf(false) }
-    var editTask by remember { mutableStateOf<Task?>(null) }
+    var showAddBar by remember { mutableStateOf(false) }
+    var editingTaskId by remember { mutableStateOf<Int?>(null) }
+
+    // 남은 시간 계산(프로그레스바)
+    val progress by viewModel.progress.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("하루 TODO") },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "설정")
-                    }
-                }
+            AppBar(
+                onNavigateToSettings = onNavigateToSettings,
+                onClickAddTask = { showAddBar = true }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "할 일 추가")
-            }
         }
     ) { innerPadding ->
         Column(modifier = Modifier
             .padding(innerPadding)
             .fillMaxSize()
         ) {
-            TopBar(
+            ProgressBarSection(
                 importantCompleted = importantCompleted,
                 importantTotal = importantTotal,
                 mediumCompleted = mediumCompleted,
                 mediumTotal = mediumTotal,
                 generalCompleted = generalCompleted,
-                generalTotal = generalTotal
+                generalTotal = generalTotal,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // 남은 시간 (더 짧은 텍스트)
-                Text(
-                    text = "남은시간: $remainingTime",
-                    style = MaterialTheme.typography.bodyMedium
+            StatusBar(
+                remainingTime = remainingTime,
+                progress = progress, // ← Float, 0.0~1.0 (남은 시간 비율)
+                showDoneTasks = showDoneTasks,
+                onToggleShowDoneTasks = { viewModel.showDoneTasks = it },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            if (showAddBar) {
+                AddTaskBar(
+                    tasks = tasks,
+                    onAddTask = { title, category ->
+                        // 실제 추가로직(성공시 true, 실패시 false)
+                        viewModel.addTask(
+                            com.haru.todo.data.model.Task(
+                                title = title,
+                                category = category,
+                                createdDate = LocalDate.now()
+                            )
+                        )
+                        true // 성공시 true 반환
+                    },
+                    onCancel = { showAddBar = false },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-
-                // 완료된 할 일 보기 토글 (텍스트 + 스위치)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "완료도 보기",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Switch(
-                        checked = showDoneTasks,
-                        onCheckedChange = { viewModel.showDoneTasks = it }
-                    )
-                }
             }
-
 
             // 할 일 리스트 등 기존 UI
             TaskList(
                 tasks = if (showDoneTasks) tasks else tasks.filter { !it.isDone },
-                onCheckedChange = { task, checked ->
-                    viewModel.updateTask(task.copy(isDone = checked))
+                editingTaskId = editingTaskId,
+                onCheckedChange = { task, checked -> viewModel.updateTask(task.copy(isDone = checked)) },
+                onDeleteClick = { task -> viewModel.deleteTask(task) },
+                onEditClick = { task -> editingTaskId = task.id }, // 클릭 시 수정모드 전환
+                onUpdateTask = { updatedTask ->
+                    viewModel.updateTask(updatedTask)
+                    editingTaskId = null // 수정모드 종료
                 },
-                onDeleteClick = { task ->
-                    viewModel.deleteTask(task)
-                },
-                onEditClick = { task -> editTask = task },
-                modifier = Modifier
+                onCancelEdit = { editingTaskId = null }
             )
         }
 
-        if (showDialog) {
-            // "추가" 모드
-            AddTaskDialog(
-                onSubmit = { title, category, _ ->
-                    viewModel.addTask(
-                        Task(
-                            title = title,
-                            category = category,
-                            // 생성 시 isDone은 기본값 false
-                            // createdDate는 오늘 날짜로 (LocalDate.now() 등)
-                            createdDate = LocalDate.now()
-                        )
-                    )
-                    showDialog = false
-                },
-                onDismiss = { showDialog = false },
-                tasks = tasks,
-                taskToEdit = null // 추가 모드!
-            )
-        }
-
-        if (editTask != null) {
-            // "수정" 모드
-            AddTaskDialog(
-                onSubmit = { title, category, id ->
-                    viewModel.updateTask(
-                        editTask!!.copy(title = title, category = category)
-                    )
-                    editTask = null
-                },
-                onDismiss = { editTask = null },
-                tasks = tasks,
-                taskToEdit = editTask
-            )
-        }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddTaskBarPreview() {
+    AddTaskBar(
+        tasks = emptyList(),
+        onAddTask = { _, _ -> true },
+        onCancel = {}
+    )
 }

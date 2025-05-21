@@ -6,12 +6,6 @@ import com.haru.todo.ui.theme.GeneralColor
 import com.haru.todo.ui.theme.ImportantColor
 import com.haru.todo.ui.theme.MediumColor
 
-fun categoryLabel(category: TaskCategory): String = when (category) {
-    TaskCategory.IMPORTANT -> "중요"
-    TaskCategory.MEDIUM -> "보통"
-    TaskCategory.GENERAL -> "일반"
-}
-
 fun categoryColor(category: TaskCategory): Color = when (category) {
     TaskCategory.IMPORTANT -> ImportantColor
     TaskCategory.MEDIUM -> MediumColor

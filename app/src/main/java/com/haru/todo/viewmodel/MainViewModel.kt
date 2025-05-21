@@ -1,6 +1,7 @@
 package com.haru.todo.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -51,6 +52,10 @@ class MainViewModel @Inject constructor(
     // 코루틴 내에서 1초마다 남은시간 계산
     private var timerJob: Job? = null
 
+    // 1. progress 값 선언
+    private val _progress = MutableStateFlow(1.0f)
+    val progress: StateFlow<Float> = _progress
+
     private fun startTimer(hour: Int, minute: Int) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -69,6 +74,13 @@ class MainViewModel @Inject constructor(
                     Locale.getDefault(),
                     "%02d시간 %02d분 %02d초 남음", hours, minutes, seconds
                 )
+
+                // 24시간 남은 비율
+                val secondsToReset = duration.seconds
+                val totalSeconds = 24 * 60 * 60
+                val progress = secondsToReset.toFloat() / totalSeconds
+                _progress.value = progress
+
                 delay(1000)
             }
         }
