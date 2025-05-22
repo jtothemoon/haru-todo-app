@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun AppBar(
     onNavigateToSettings: () -> Unit,
-    onClickAddTask: () -> Unit
+    onClickAddTask: (() -> Unit)? = null
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -30,12 +30,14 @@ fun AppBar(
             )
         },
         actions = {
-            IconButton(onClick = onClickAddTask) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "할 일 추가",
-                    tint = MaterialTheme.colorScheme.primary // 포인트컬러
-                )
+            if (onClickAddTask != null) {
+                IconButton(onClick = onClickAddTask) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "할 일 추가",
+                        tint = MaterialTheme.colorScheme.primary // 포인트컬러
+                    )
+                }
             }
             IconButton(onClick = onNavigateToSettings) {
                 Icon(

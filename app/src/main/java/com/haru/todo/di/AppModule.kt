@@ -3,6 +3,7 @@ package com.haru.todo.di
 import android.content.Context
 import androidx.room.Room
 import com.haru.todo.data.db.AppDatabase
+import com.haru.todo.data.db.DailyTaskStatDao
 import com.haru.todo.data.db.TaskDao
 import com.haru.todo.data.repository.TaskRepository
 import dagger.Module
@@ -30,7 +31,13 @@ object AppModule {
     fun provideTaskDao(db: AppDatabase): TaskDao = db.taskDao()
 
     @Provides
+    fun provideDailyTaskStatDao(db: AppDatabase): DailyTaskStatDao = db.dailyTaskStatDao()
+
+    @Provides
     @Singleton
-    fun provideTaskRepository(taskDao: TaskDao): TaskRepository =
-        TaskRepository(taskDao)
+    fun provideTaskRepository(
+        taskDao: TaskDao,
+        dailyTaskStatDao: DailyTaskStatDao
+    ): TaskRepository =
+        TaskRepository(taskDao, dailyTaskStatDao)
 }

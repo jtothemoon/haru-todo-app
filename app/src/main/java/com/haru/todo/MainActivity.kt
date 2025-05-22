@@ -10,7 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.haru.todo.ui.screen.MainScreen
+import com.haru.todo.ui.screen.HomeRootScreen
 import com.haru.todo.ui.screen.SettingsScreen
 import com.haru.todo.ui.theme.HaruTheme
 import com.haru.todo.viewmodel.MainViewModel
@@ -41,7 +41,7 @@ object Screen {
 fun NavGraph(navController: NavHostController, mainViewModel: MainViewModel) {
     NavHost(navController = navController, startDestination = Screen.MAIN) {
         composable(Screen.MAIN) {
-            MainScreen(
+            HomeRootScreen(
                 viewModel = mainViewModel,
                 onNavigateToSettings = { navController.navigate(Screen.SETTINGS) }
             )

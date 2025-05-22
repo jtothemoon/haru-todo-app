@@ -113,18 +113,21 @@ class MainViewModel @Inject constructor(
     // 할 일 추가
     fun addTask(task: Task) = viewModelScope.launch {
         repository.insertTask(task)
+        repository.snapshotDailyStatFor(task.createdDate)
         _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 추가되었습니다!"))
     }
 
     // 할 일 완료 체크/해제 등 수정
     fun updateTask(task: Task) = viewModelScope.launch {
         repository.updateTask(task)
+        repository.snapshotDailyStatFor(task.createdDate)
         _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 수정되었습니다."))
     }
 
     // 할 일 삭제
     fun deleteTask(task: Task) = viewModelScope.launch {
         repository.deleteTask(task)
+        repository.snapshotDailyStatFor(task.createdDate)
         _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 삭제되었습니다."))
     }
 

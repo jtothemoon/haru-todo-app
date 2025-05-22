@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.edit
 import com.haru.todo.MainActivity
 import com.haru.todo.R
 import com.haru.todo.data.db.AppDatabase
+import com.haru.todo.data.repository.TaskRepository
 import com.haru.todo.utils.AlarmScheduler
 import com.haru.todo.utils.dataStore
 import kotlinx.coroutines.CoroutineScope
@@ -42,9 +43,16 @@ class ResetReceiver : BroadcastReceiver() {
                 Log.d("ResetReceiver", "알람이 실행되었습니다! DB 초기화 시작!")
                 CoroutineScope(Dispatchers.IO).launch {
                     val db = AppDatabase.getInstance(context)
+                    val repository = TaskRepository(db.taskDao(), db.dailyTaskStatDao())
+                    val yesterday = LocalDate.now().minusDays(1)
+
+                    // 1. 어제 할 일 통계 스냅샷 저장
+                    repository.snapshotDailyStatFor(yesterday)
+
+                    // 2. 오늘 할 일 초기화
                     db.taskDao().deleteTasksByDate(LocalDate.now().toString())
 
-                    // 2. DataStore에 리셋 시각 기록
+                    // 3. DataStore에 리셋 시각 기록
                     context.dataStore.edit { prefs ->
                         prefs[ResetPrefs.LAST_RESET_TIME] = System.currentTimeMillis()
                     }
