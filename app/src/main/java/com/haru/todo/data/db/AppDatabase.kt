@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import com.haru.todo.data.model.DailyTaskStat
 import com.haru.todo.data.model.Task
 
-@Database(entities = [Task::class, DailyTaskStat::class], version = 2)
+@Database(entities = [Task::class, DailyTaskStat::class], version = 1)
 @TypeConverters(LocalDateConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

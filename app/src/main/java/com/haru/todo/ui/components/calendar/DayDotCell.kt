@@ -2,6 +2,7 @@ package com.haru.todo.ui.components.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +39,9 @@ fun DayDotCell(
     day: CalendarDay,
     isToday: Boolean,
     stat: DailyTaskStat?,
-    visibleMonth: YearMonth
+    visibleMonth: YearMonth,
+    isSelected: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
     // 현재 월에 속하는 날짜만 진하게
     val isInCurrentMonth =
@@ -58,7 +61,15 @@ fun DayDotCell(
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .padding(2.dp),
+            .padding(2.dp)
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() } else Modifier
+            )
+            .then(
+                if (isSelected) Modifier
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) // 선택 효과
+                else Modifier
+            ),
         contentAlignment = Alignment.Center
     ) {
         // 오늘 날짜: 빨간 원(꽉 찬)

@@ -50,7 +50,7 @@ class ResetReceiver : BroadcastReceiver() {
                     repository.snapshotDailyStatFor(yesterday)
 
                     // 2. 오늘 할 일 초기화
-                    db.taskDao().deleteTasksByDate(LocalDate.now().toString())
+                    db.taskDao().archiveTasksByDate(LocalDate.now().toString())
 
                     // 3. DataStore에 리셋 시각 기록
                     context.dataStore.edit { prefs ->

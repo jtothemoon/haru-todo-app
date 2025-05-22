@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.haru.todo.ui.components.calendar.CalendarTaskList
 import com.haru.todo.ui.components.calendar.HaruCalendarView
 import com.haru.todo.viewmodel.CalendarStatViewModel
 import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -41,6 +42,10 @@ fun CalendarStatScreen(
     LaunchedEffect(visibleMonth) {
         viewModel.setMonth(visibleMonth)
     }
+
+    // 선택된 날짜와 해당 날짜의 할 일 리스트 구독
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val tasks by viewModel.tasksOfSelectedDate.collectAsState()
 
     Column(
         modifier = modifier
@@ -108,7 +113,20 @@ fun CalendarStatScreen(
         HaruCalendarView(
             state = state,
             statMap = statMap,
-            visibleMonth = visibleMonth
+            visibleMonth = visibleMonth,
+            selectedDate = selectedDate,
+            onDayClick = { day -> viewModel.setSelectedDate(day.date) }
         )
+
+        // 4. 할일 리스트
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "${selectedDate}의 할 일",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+        )
+        // 분리된 리스트 컴포넌트 호출!
+        CalendarTaskList(tasks = tasks)
+
     }
 }

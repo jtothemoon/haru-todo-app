@@ -3,6 +3,7 @@ package com.haru.todo.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.haru.todo.data.model.DailyTaskStat
+import com.haru.todo.data.model.Task
 import com.haru.todo.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,4 +35,18 @@ class CalendarStatViewModel @Inject constructor(
     fun setMonth(month: YearMonth) {
         _calendarMonth.value = month
     }
+
+    // 선택된 날짜 상태
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    val selectedDate: StateFlow<LocalDate> = _selectedDate
+
+    fun setSelectedDate(date: LocalDate) {
+        _selectedDate.value = date
+    }
+
+    // 선택 날짜별 할 일 리스트 (자동 갱신)
+    val tasksOfSelectedDate: StateFlow<List<Task>> =
+        _selectedDate.flatMapLatest { date ->
+            repository.getAllTasksByDate(date.toString())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.haru.todo.data.model.DailyTaskStat
 import com.kizitonwose.calendar.compose.CalendarState
 import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.core.CalendarDay
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -13,6 +14,8 @@ fun HaruCalendarView(
     state: CalendarState,
     statMap: Map<LocalDate, DailyTaskStat>,
     visibleMonth: YearMonth,
+    selectedDate: LocalDate,
+    onDayClick: (CalendarDay) -> Unit,
     modifier: Modifier = Modifier
 ) {
     HorizontalCalendar(
@@ -22,7 +25,9 @@ fun HaruCalendarView(
                 day = day,
                 isToday = day.date == LocalDate.now(),
                 stat = statMap[day.date],
-                visibleMonth = visibleMonth
+                visibleMonth = visibleMonth,
+                isSelected = day.date == selectedDate,
+                onClick = { onDayClick(day) }
             )
         },
         modifier = modifier

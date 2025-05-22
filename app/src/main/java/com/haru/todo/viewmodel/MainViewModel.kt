@@ -103,7 +103,7 @@ class MainViewModel @Inject constructor(
 
     // lastResetTime이 바뀔 때마다 Room을 다시 구독!
     val tasks: StateFlow<List<Task>> = lastResetTime.flatMapLatest {
-        repository.getTasksByDate(today)
+        repository.getActiveTasksByDate(today)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -126,7 +126,7 @@ class MainViewModel @Inject constructor(
 
     // 할 일 삭제
     fun deleteTask(task: Task) = viewModelScope.launch {
-        repository.deleteTask(task)
+        repository.archiveTask(task.id)
         repository.snapshotDailyStatFor(task.createdDate)
         _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 삭제되었습니다."))
     }
