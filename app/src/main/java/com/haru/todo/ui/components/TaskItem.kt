@@ -14,7 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.haru.todo.data.model.Task
@@ -84,9 +88,29 @@ fun TaskRowItem(
 
         // 3. 텍스트 or 입력란
         if (mode == TaskRowMode.EDIT) {
+            // 포커스 요청자 생성
+            val focusRequester = remember { FocusRequester() }
+
+            // TextFieldValue 상태 관리 (title이 바뀌면 selection도 끝으로)
+            var textFieldValue by remember(title) {
+                mutableStateOf(TextFieldValue(title, selection = TextRange(title.length)))
+            }
+
+            // mode가 EDIT로 바뀔 때마다 포커스 요청!
+            LaunchedEffect(mode) {
+                if (mode == TaskRowMode.EDIT) {
+                    // selection도 끝으로
+                    textFieldValue = textFieldValue.copy(selection = TextRange(textFieldValue.text.length))
+                    focusRequester.requestFocus()
+                }
+            }
+
             BasicTextField(
-                value = title,
-                onValueChange = onTitleChange,
+                value = textFieldValue,
+                onValueChange = {
+                    textFieldValue = it
+                    onTitleChange(it.text) // 외부에도 string 전달
+                },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface
@@ -95,7 +119,8 @@ fun TaskRowItem(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(end = 8.dp),
+                    .padding(end = 8.dp)
+                    .focusRequester(focusRequester),
                 decorationBox = { innerTextField ->
                     Box(
                         modifier = Modifier

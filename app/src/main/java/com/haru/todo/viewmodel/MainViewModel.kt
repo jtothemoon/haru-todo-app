@@ -1,7 +1,6 @@
 package com.haru.todo.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,6 +30,14 @@ class MainViewModel @Inject constructor(
     private val _remainingTime = MutableStateFlow("로딩 중…")
     val remainingTime: StateFlow<String> = _remainingTime
     var showDoneTasks by mutableStateOf(false)
+
+    // Snackbar 관련 이벤트
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowSnackbar(val message: String): UiEvent()
+    }
 
     init {
         viewModelScope.launch {
@@ -106,24 +113,19 @@ class MainViewModel @Inject constructor(
     // 할 일 추가
     fun addTask(task: Task) = viewModelScope.launch {
         repository.insertTask(task)
+        _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 추가되었습니다!"))
     }
 
     // 할 일 완료 체크/해제 등 수정
     fun updateTask(task: Task) = viewModelScope.launch {
         repository.updateTask(task)
+        _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 수정되었습니다."))
     }
 
     // 할 일 삭제
     fun deleteTask(task: Task) = viewModelScope.launch {
         repository.deleteTask(task)
+        _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 삭제되었습니다."))
     }
 
-    // 필요시 오늘 전체 삭제 (수동 초기화 or 테스트용)
-    fun deleteAllTasksToday() = viewModelScope.launch {
-        repository.deleteTasksByDate(today)
-    }
-
-    fun toggleShowDoneTasks() {
-        showDoneTasks = !showDoneTasks
-    }
 }

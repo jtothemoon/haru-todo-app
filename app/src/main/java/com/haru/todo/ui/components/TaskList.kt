@@ -22,6 +22,7 @@ import com.haru.todo.data.model.TaskCategory
 fun TaskList(
     tasks: List<Task>,
     editingTaskId: Int?,
+    isAddingTask: Boolean = false,
     onCheckedChange: (Task, Boolean) -> Unit,
     onDeleteClick: (Task) -> Unit,
     onEditClick: (Task) -> Unit,
@@ -37,56 +38,58 @@ fun TaskList(
         mutableStateOf(tasks.find { it.id == editingTaskId }?.category ?: TaskCategory.IMPORTANT)
     }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp)
-    ) {
-        if (tasks.isEmpty()) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 40.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "오늘의 할 일이 없습니다!",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+    // "입력/수정 중" 상태 플래그 계산
+    val isEditing = editingTaskId != null
+
+    if (tasks.isEmpty() && !isEditing && !isAddingTask) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "오늘의 할 일이 없습니다!",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp)
+        ) {
+            items(tasks, key = { it.id }) { task ->
+                val isEdit = editingTaskId == task.id
+
+                if (isEdit) {
+                    TaskRowItem(
+                        mode = TaskRowMode.EDIT,
+                        title = editTitle,
+                        onTitleChange = { editTitle = it },
+                        category = editCategory,
+                        onCategoryChange = { editCategory = it },
+                        onUpdate = {
+                            onUpdateTask(task.copy(title = editTitle, category = editCategory))
+                        },
+                        onCancel = onCancelEdit,
+                    )
+                } else {
+                    TaskRowItem(
+                        mode = TaskRowMode.VIEW,
+                        task = task,
+                        onCheckedChange = { checked -> onCheckedChange(task, checked) },
+                        onDeleteClick = { onDeleteClick(task) },
+                        onClick = { onEditClick(task) }
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        }
-
-        items(tasks, key = { it.id }) { task ->
-            val isEdit = editingTaskId == task.id
-
-            if (isEdit) {
-                TaskRowItem(
-                    mode = TaskRowMode.EDIT,
-                    title = editTitle,
-                    onTitleChange = { editTitle = it },
-                    category = editCategory,
-                    onCategoryChange = { editCategory = it },
-                    onUpdate = {
-                        onUpdateTask(task.copy(title = editTitle, category = editCategory))
-                    },
-                    onCancel = onCancelEdit,
-                )
-            } else {
-                TaskRowItem(
-                    mode = TaskRowMode.VIEW,
-                    task = task,
-                    onCheckedChange = { checked -> onCheckedChange(task, checked) },
-                    onDeleteClick = { onDeleteClick(task) },
-                    onClick = { onEditClick(task) }
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
+
 }

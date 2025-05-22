@@ -26,3 +26,7 @@ val MediumColor = Color(0xFFFFB74D)      // 주황 (보통)
 val GeneralColor = Color(0xFF64B5F6)     // 파랑 (일반)
 val UnfilledColor = Color(0xFFE0E0E0)    // 연회색 (진행률, 비활성)
 val PointColor = Color(0xFF3748FF)       // 앱 공통 포인트(버튼/토글 등, 선택)
+
+// Snackbar용 컬러 (명확하게 추가)
+val HaruSnackbarBg = Color(0xFF23272F)        // 다크그레이(밝은테마) / 밝은색(다크모드) 원하는대로
+val HaruSnackbarText = Color(0xFFFFFFFF)      // 흰색 (글자)

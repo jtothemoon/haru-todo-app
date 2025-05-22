@@ -12,6 +12,7 @@ import com.haru.todo.ui.components.AppBar
 import com.haru.todo.ui.components.ProgressBarSection
 import com.haru.todo.ui.components.StatusBar
 import com.haru.todo.ui.components.TaskList
+import com.haru.todo.ui.theme.HaruSnackbarHost
 import com.haru.todo.viewmodel.MainViewModel
 import java.time.LocalDate
 
@@ -41,13 +42,27 @@ fun MainScreen(
     // 남은 시간 계산(프로그레스바)
     val progress by viewModel.progress.collectAsState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 이벤트 구독
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is MainViewModel.UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             AppBar(
                 onNavigateToSettings = onNavigateToSettings,
                 onClickAddTask = { showAddBar = true }
             )
-        }
+        },
+        snackbarHost = { HaruSnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(modifier = Modifier
             .padding(innerPadding)
@@ -94,6 +109,7 @@ fun MainScreen(
             TaskList(
                 tasks = if (showDoneTasks) tasks else tasks.filter { !it.isDone },
                 editingTaskId = editingTaskId,
+                isAddingTask = showAddBar,
                 onCheckedChange = { task, checked -> viewModel.updateTask(task.copy(isDone = checked)) },
                 onDeleteClick = { task -> viewModel.deleteTask(task) },
                 onEditClick = { task -> editingTaskId = task.id }, // 클릭 시 수정모드 전환

@@ -3,7 +3,7 @@ package com.haru.todo.ui.screen
 import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.haru.todo.ui.components.settings.SettingNotificationSwitch
 import com.haru.todo.ui.components.settings.SettingTimePicker
+import com.haru.todo.ui.theme.HaruDivider
 import com.haru.todo.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +32,7 @@ fun SettingsScreen(
                 title = { Text("설정") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
             )
@@ -50,6 +51,7 @@ fun SettingsScreen(
                     viewModel.setAllowNotification(checked)
                 }
             )
+            HaruDivider()
 
             Spacer(Modifier.height(24.dp))
 
@@ -59,6 +61,7 @@ fun SettingsScreen(
                 minute = minute,
                 onClickChange = { showTimePicker = true }
             )
+            HaruDivider()
 
             Spacer(Modifier.height(32.dp))
 

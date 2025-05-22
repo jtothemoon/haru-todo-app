@@ -30,17 +30,17 @@ fun AppBar(
             )
         },
         actions = {
-            IconButton(onClick = onNavigateToSettings) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "설정",
-                    tint = MaterialTheme.colorScheme.primary // 포인트컬러
-                )
-            }
             IconButton(onClick = onClickAddTask) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "할 일 추가",
+                    tint = MaterialTheme.colorScheme.primary // 포인트컬러
+                )
+            }
+            IconButton(onClick = onNavigateToSettings) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "설정",
                     tint = MaterialTheme.colorScheme.primary // 포인트컬러
                 )
             }
