@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import com.haru.todo.utils.dataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,12 +22,13 @@ class SettingsViewModel @Inject constructor(
     companion object {
         val HOUR_KEY = intPreferencesKey("reset_hour")
         val MINUTE_KEY = intPreferencesKey("reset_minute")
+        val LAST_RESET_TIME_CHANGED_KEY = longPreferencesKey("last_reset_time_changed")
     }
 
     val resetHour: StateFlow<Int>
     val resetMinute: StateFlow<Int>
-
     val allowNotification: StateFlow<Boolean>
+    val lastResetTimeChanged: StateFlow<Long>
 
     init {
         val prefsFlow = dataStore.data
@@ -48,6 +50,19 @@ class SettingsViewModel @Inject constructor(
         allowNotification = dataStore.data
             .map { prefs -> prefs[ResetPrefs.ALLOW_NOTIFICATION] ?: true }
             .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+        // 마지막 변경 시각 Flow 추가 (기본 0)
+        lastResetTimeChanged = dataStore.data
+            .map { prefs -> prefs[LAST_RESET_TIME_CHANGED_KEY] ?: 0L }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
+    }
+
+    // 시간 변경 가능 여부 체크 (suspend, UI에서 호출)
+    suspend fun canChangeResetTime(): Boolean {
+        val lastChanged = lastResetTimeChanged.value
+        val now = System.currentTimeMillis()
+        // 24시간(=86,400,000ms) 경과했으면 true
+        return (now - lastChanged) >= 86_400_000L
     }
 
     fun setResetTime(hour: Int, minute: Int) {
@@ -55,6 +70,7 @@ class SettingsViewModel @Inject constructor(
             dataStore.edit { prefs ->
                 prefs[HOUR_KEY] = hour
                 prefs[MINUTE_KEY] = minute
+                prefs[LAST_RESET_TIME_CHANGED_KEY] = System.currentTimeMillis()
             }
             // 알람 등록
             com.haru.todo.utils.AlarmScheduler.cancelResetAlarm(getApplication())

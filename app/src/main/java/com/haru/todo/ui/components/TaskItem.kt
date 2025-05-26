@@ -217,15 +217,3 @@ fun TaskRowItem(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun TaskRowItemPreview() {
-    TaskRowItem(
-        mode = TaskRowMode.VIEW,
-        task = Task(1, "예시 할 일", false, TaskCategory.MEDIUM, LocalDate.now()),
-        onCheckedChange = {},
-        onDeleteClick = {},
-        onClick = {}
-    )
-}

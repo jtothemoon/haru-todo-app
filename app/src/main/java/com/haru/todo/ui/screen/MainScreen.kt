@@ -4,15 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.haru.todo.data.model.TaskCategory
 import com.haru.todo.ui.components.AddTaskBar
-import com.haru.todo.ui.components.AppBar
 import com.haru.todo.ui.components.ProgressBarSection
 import com.haru.todo.ui.components.StatusBar
 import com.haru.todo.ui.components.TaskList
-import com.haru.todo.ui.theme.HaruSnackbarHost
 import com.haru.todo.viewmodel.MainViewModel
 import java.time.LocalDate
 
@@ -48,7 +45,14 @@ fun MainScreen(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is MainViewModel.UiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message)
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = if (event.withUndo) "UNDO" else null,
+                        duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed && event.withUndo) {
+                        viewModel.restoreDeletedTask()
+                    }
                 }
             }
         }

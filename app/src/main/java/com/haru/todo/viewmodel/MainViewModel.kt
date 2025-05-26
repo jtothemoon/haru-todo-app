@@ -35,10 +35,6 @@ class MainViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    sealed class UiEvent {
-        data class ShowSnackbar(val message: String): UiEvent()
-    }
-
     init {
         viewModelScope.launch {
             // DataStore에서 초기화 시각 읽기 (시간, 분)
@@ -124,11 +120,28 @@ class MainViewModel @Inject constructor(
         _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 수정되었습니다."))
     }
 
-    // 할 일 삭제
+    // 최근 삭제된 Task 임시 저장
+    private var recentlyDeletedTask: Task? = null
+
+    // 완전 삭제 + UNDO emit
     fun deleteTask(task: Task) = viewModelScope.launch {
-        repository.archiveTask(task.id)
+        repository.deleteTask(task) // 완전 삭제
         repository.snapshotDailyStatFor(task.createdDate)
-        _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 삭제되었습니다."))
+        recentlyDeletedTask = task // 임시 저장
+        _eventFlow.emit(UiEvent.ShowSnackbar("할 일이 삭제되었습니다.", withUndo = true))
+    }
+
+    // UNDO 복원 함수
+    fun restoreDeletedTask() = viewModelScope.launch {
+        recentlyDeletedTask?.let {
+            repository.insertTask(it)
+            recentlyDeletedTask = null
+        }
+    }
+
+    // UiEvent 정의
+    sealed class UiEvent {
+        data class ShowSnackbar(val message: String, val withUndo: Boolean = false): UiEvent()
     }
 
 }
